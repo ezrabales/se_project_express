@@ -4,12 +4,12 @@ const errorHandler = require("../utils/errors");
 module.exports.getItems = (req, res) => {
   if (
     item.find().then((items) => {
-      !item;
+      !items;
     })
   ) {
     return res.status(200).send({ message: "This database is empty" });
   }
-  item
+  return item
     .find({})
     .orFail()
     .then((items) => res.send({ data: items }))
@@ -30,7 +30,7 @@ module.exports.createItem = async (req, res) => {
       imageUrl,
       owner: "68a0169278f04c2b144dc661",
     });
-    res.status(201).send({ data: newItem });
+    return res.status(201).send({ data: newItem });
   } catch (err) {
     errorHandler(err, "ValidationError", res);
   }

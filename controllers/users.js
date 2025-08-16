@@ -28,7 +28,7 @@ module.exports.createUser = async (req, res) => {
       return res.status(400).send({ error: "Name and avatar are required." });
     }
     const newUser = await user.create({ name, avatar });
-    res.status(201).send({ data: newUser });
+    return res.status(201).send({ data: newUser });
   } catch (err) {
     errorHandler(err, "ValidationError", res);
   }
