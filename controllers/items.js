@@ -9,7 +9,7 @@ module.exports.getItems = (req, res) => {
       if (items.length === 0) {
         return res.status(200).send({ message: "This database is empty" });
       }
-      res.send({ data: items });
+      return res.send({ data: items });
     })
     .catch((err) => errorHandler(err, "ValidationError", res));
 };
