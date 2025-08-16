@@ -2,21 +2,19 @@ const item = require("../models/clothingItem");
 const errorHandler = require("../utils/errors");
 
 module.exports.getItems = (req, res) => {
-  if (
-    item.find().then((items) => {
-      !items;
-    })
-  ) {
-    return res.status(200).send({ message: "This database is empty" });
-  }
   return item
     .find({})
     .orFail()
-    .then((items) => res.send({ data: items }))
+    .then((items) => {
+      if (items.length === 0) {
+        return res.status(200).send({ message: "This database is empty" });
+      }
+      res.send({ data: items });
+    })
     .catch((err) => errorHandler(err, "ValidationError", res));
 };
 
-module.exports.createItem = async (req, res) => {
+module.exports.createItem = (req, res) => {
   try {
     const { name, weather, imageUrl } = req.body;
     if (!name || !weather || !imageUrl) {
@@ -24,7 +22,7 @@ module.exports.createItem = async (req, res) => {
         .status(400)
         .send({ error: "name, weather, and imageUrl are required." });
     }
-    const newItem = await item.create({
+    const newItem = item.create({
       name,
       weather,
       imageUrl,

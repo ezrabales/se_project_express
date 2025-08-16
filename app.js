@@ -7,6 +7,10 @@ const mongoose = require("mongoose");
 
 mongoose.connect("mongodb://127.0.0.1:27017/wtwr_db");
 
+req.user = {
+  _id: "68a0169278f04c2b144dc661",
+};
+
 app.use(express.json());
 
 app.use("/users", require("./routes/users"));
