@@ -4,17 +4,16 @@ const errorHandler = require("../utils/errors");
 module.exports.getItems = (req, res) => {
   return item
     .find({})
-    .orFail()
     .then((items) => {
       if (items.length === 0) {
-        return res.status(200).send({ message: "This database is empty" });
+        return res.status(200).send({ data: [] });
       }
       return res.send({ data: items });
     })
     .catch((err) => errorHandler(err, "ValidationError", res));
 };
 
-module.exports.createItem = (req, res) => {
+module.exports.createItem = async (req, res) => {
   try {
     const { name, weather, imageUrl } = req.body;
     if (!name || !weather || !imageUrl) {
@@ -22,7 +21,7 @@ module.exports.createItem = (req, res) => {
         .status(400)
         .send({ error: "name, weather, and imageUrl are required." });
     }
-    const newItem = item.create({
+    const newItem = await item.create({
       name,
       weather,
       imageUrl,
@@ -36,9 +35,11 @@ module.exports.createItem = (req, res) => {
 
 module.exports.deleteItem = (req, res) => {
   const { itemId } = req.params;
-  if (!item.findById(itemId)) {
-    res.status(404).send({ message: "Item not found" });
-  }
+  item.findById(itemId).then((item) => {
+    if (!item) {
+      return res.status(404).send({ message: "Item not found" });
+    }
+  });
   item
     .findByIdAndDelete(itemId)
     .orFail()
@@ -47,6 +48,5 @@ module.exports.deleteItem = (req, res) => {
         .status(200)
         .send({ message: "Item successfully deleted", data: deletedItem });
     })
-
     .catch((err) => errorHandler(err, "ValidationError", res));
 };
