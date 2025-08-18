@@ -1,9 +1,30 @@
-# WTWR (What to Wear?): Back End
-The back-end project is focused on creating a server for the WTWR application. You’ll gain a deeper understanding of how to work with databases, set up security and testing, and deploy web applications on a remote machine. The eventual goal is to create a server with an API and user authorization.
-## Running the Project
-`npm run start` — to launch the server 
+# 🧥 WTWR (What to Wear) — Backend Server
 
-`npm run dev` — to launch the server with the hot reload feature
+This project is the backend for the **WTWR (What to Wear)** application, designed to help users choose appropriate clothing based on the weather. It provides a RESTful API for managing clothing items and user data, with secure authentication and robust error handling.
 
-### Testing
-Before committing your code, make sure you edit the file `sprint.txt` in the root folder. The file `sprint.txt` should contain the number of the sprint you're currently working on. For ex. 12
+## 📌 Project Goals
+
+- Build a fully functional backend server using Node.js and Express.js
+- Implement secure user authentication and authorization
+- Connect and interact with a MongoDB database
+- Handle errors gracefully and consistently
+- Deploy the server to a remote machine for public access
+
+## 🛠️ Technologies & Techniques Used
+
+- **Node.js** and **Express.js** — for building the server and routing
+- **MongoDB** with **Mongoose** — for database modeling and queries
+- **JWT (JSON Web Tokens)** — for secure user authentication
+- **ESLint** — for maintaining clean and consistent code
+- **Environment Variables (.env)** — for secure configuration
+- **RESTful API Design** — for scalable and maintainable endpoints
+- **Custom Error Handling Middleware** — for consistent error responses
+- **Deployment** — via platforms like Render or Heroku
+
+## 🚀 Features
+
+- User registration and login with hashed passwords
+- Token-based authentication for protected routes
+- CRUD operations for clothing items
+- Centralized error handling and status code management
+- Modular controller and route structure

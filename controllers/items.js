@@ -1,16 +1,17 @@
 const item = require("../models/clothingItem");
 const errorHandler = require("../utils/errors");
+const errors = require("../utils/constants");
 
 module.exports.getItems = (req, res) => {
-  return item
+  item
     .find({})
-    .then((items) => {
-      if (items.length === 0) {
-        return res.status(200).send({ data: [] });
+    .then((items) => res.send({ data: items }))
+    .catch((err) => {
+      if (err.name) {
+        return errorHandler(err, err.name, res);
       }
-      return res.send({ data: items });
-    })
-    .catch((err) => errorHandler(err, "ValidationError", res));
+      return console.error(err);
+    });
 };
 
 module.exports.createItem = async (req, res) => {
@@ -18,35 +19,48 @@ module.exports.createItem = async (req, res) => {
     const { name, weather, imageUrl } = req.body;
     if (!name || !weather || !imageUrl) {
       return res
-        .status(400)
+        .status(errors.badReq)
         .send({ error: "name, weather, and imageUrl are required." });
     }
     const newItem = await item.create({
       name,
       weather,
       imageUrl,
-      owner: "68a0169278f04c2b144dc661",
+      owner: req.user._id,
     });
     return res.status(201).send({ data: newItem });
   } catch (err) {
-    errorHandler(err, "ValidationError", res);
+    if (err.name) {
+      return errorHandler(err, err.name, res);
+    }
+    return console.error(err);
   }
 };
 
 module.exports.deleteItem = (req, res) => {
   const { itemId } = req.params;
-  item.findById(itemId).then((item) => {
-    if (!item) {
-      return res.status(404).send({ message: "Item not found" });
+  item.then((i) => {
+    if (!i) {
+      return res.status(errors.notFound).send({ message: "Item not found" });
     }
+    return item
+      .findByIdAndDelete(itemId)
+      .orFail(() => {
+        const err = new Error("Item not found");
+        err.name = "NotFound";
+        throw err;
+      })
+      .then((deletedItem) =>
+        res.send({
+          message: "Item successfully deleted",
+          data: deletedItem,
+        })
+      )
+      .catch((err) => {
+        if (err.name) {
+          return errorHandler(err, err.name, res);
+        }
+        return console.error(err);
+      });
   });
-  item
-    .findByIdAndDelete(itemId)
-    .orFail()
-    .then((deletedItem) => {
-      res
-        .status(200)
-        .send({ message: "Item successfully deleted", data: deletedItem });
-    })
-    .catch((err) => errorHandler(err, "ValidationError", res));
 };
