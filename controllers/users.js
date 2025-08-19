@@ -8,10 +8,9 @@ module.exports.getUsers = (req, res) => {
     .then((users) => res.send({ data: users }))
     .catch((err) => {
       if (err.name) {
-        return errorHandler(err, err.name, res);
-      } 
-        return console.error(err);
-      
+        return errorHandler(err, res);
+      }
+      return console.error(err);
     });
 };
 
@@ -42,7 +41,7 @@ module.exports.createUser = async (req, res) => {
     return res.status(201).send({ data: newUser });
   } catch (err) {
     if (err.name) {
-      return errorHandler(err, err.name, res);
+      return errorHandler(err, res);
     }
     return console.error(err);
   }

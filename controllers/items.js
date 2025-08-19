@@ -8,7 +8,7 @@ module.exports.getItems = (req, res) => {
     .then((items) => res.send({ data: items }))
     .catch((err) => {
       if (err.name) {
-        return errorHandler(err, err.name, res);
+        return errorHandler(err, res);
       }
       return console.error(err);
     });
@@ -31,7 +31,7 @@ module.exports.createItem = async (req, res) => {
     return res.status(201).send({ data: newItem });
   } catch (err) {
     if (err.name) {
-      return errorHandler(err, err.name, res);
+      return errorHandler(err, res);
     }
     return console.error(err);
   }
@@ -39,28 +39,23 @@ module.exports.createItem = async (req, res) => {
 
 module.exports.deleteItem = (req, res) => {
   const { itemId } = req.params;
-  item.then((i) => {
-    if (!i) {
-      return res.status(errors.notFound).send({ message: "Item not found" });
-    }
-    return item
-      .findByIdAndDelete(itemId)
-      .orFail(() => {
-        const err = new Error("Item not found");
-        err.name = "NotFound";
-        throw err;
+  return item
+    .findByIdAndDelete(itemId)
+    .orFail(() => {
+      const err = new Error("Item not found");
+      err.name = "NotFound";
+      throw err;
+    })
+    .then((deletedItem) =>
+      res.send({
+        message: "Item successfully deleted",
+        data: deletedItem,
       })
-      .then((deletedItem) =>
-        res.send({
-          message: "Item successfully deleted",
-          data: deletedItem,
-        })
-      )
-      .catch((err) => {
-        if (err.name) {
-          return errorHandler(err, err.name, res);
-        }
-        return console.error(err);
-      });
-  });
+    )
+    .catch((err) => {
+      if (err.name) {
+        return errorHandler(err, res);
+      }
+      return console.error(err);
+    });
 };

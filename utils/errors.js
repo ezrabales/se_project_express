@@ -1,19 +1,17 @@
-const { errors } = require("./constants");
+const { serverErr, castError, notFound } = require("./constants");
 
-const errorHandler = (err, errorName, res) => {
+const errorHandler = (err, res) => {
   if (err.name === "CastError") {
-    return res.status(errors.castError).send({ message: "Invalid ID format" });
+    return res.status(castError).send({ message: "Invalid ID format" });
   }
-  if (err.name === "DocumentNotFoundError") {
-    return res.status(errors.notFound).send({ message: "Item not found" });
+  if (err.name === "NotFound") {
+    return res.status(notFound).send({ message: "Item not found" });
   }
   if (err.name === "ValidationError") {
-    return res
-      .status(errors.validationError)
-      .send({ message: "Validation error" });
+    return res.status(validationError).send({ message: "Validation error" });
   }
   return res
-    .status(errors.serverErr)
+    .status(serverErr)
     .send({ message: "An error has occurred on the server." });
 };
 module.exports = errorHandler;
