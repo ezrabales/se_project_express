@@ -1,17 +1,12 @@
 const user = require("../models/user");
 const errorHandler = require("../utils/errors");
-const errors = require("../utils/constants");
+const { badReq, notFound } = require("../utils/constants");
 
 module.exports.getUsers = (req, res) => {
   user
     .find({})
     .then((users) => res.send({ data: users }))
-    .catch((err) => {
-      if (err.name) {
-        return errorHandler(err, res);
-      }
-      return console.error(err);
-    });
+    .catch((err) => errorHandler(err, res));
 };
 
 module.exports.getUser = (req, res) => {
@@ -19,7 +14,7 @@ module.exports.getUser = (req, res) => {
     .findById(req.params.userId)
     .orFail(() => {
       const err = new Error("User not found");
-      err.status = errors.notFound;
+      err.status = notFound;
       err.name = "NotFound";
       throw err;
     })
@@ -34,15 +29,12 @@ module.exports.createUser = async (req, res) => {
     const { name, avatar } = req.body;
     if (!name || !avatar) {
       return res
-        .status(errors.badReq)
+        .status(badReq)
         .send({ error: "Name and avatar are required." });
     }
     const newUser = await user.create({ name, avatar });
     return res.status(201).send({ data: newUser });
   } catch (err) {
-    if (err.name) {
-      return errorHandler(err, res);
-    }
-    return console.error(err);
+    return errorHandler(err, res);
   }
 };

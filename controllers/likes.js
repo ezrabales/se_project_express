@@ -12,12 +12,7 @@ module.exports.likeItem = (req, res) => {
       throw err;
     })
     .then((updatedItem) => res.status(200).send({ data: updatedItem }))
-    .catch((err) => {
-      if (err.name) {
-        return errorHandler(err, res);
-      }
-      return console.error(err);
-    });
+    .catch((err) => errorHandler(err, res));
 };
 
 module.exports.unlikeItem = (req, res) => {
@@ -31,10 +26,5 @@ module.exports.unlikeItem = (req, res) => {
       throw err;
     })
     .then((updatedItem) => res.status(200).send({ data: updatedItem }))
-    .catch((err) => {
-      if (err.name) {
-        return errorHandler(err, res);
-      }
-      return console.error(err);
-    });
+    .catch((err) => errorHandler(err, res));
 };

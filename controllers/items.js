@@ -1,17 +1,12 @@
 const item = require("../models/clothingItem");
 const errorHandler = require("../utils/errors");
-const errors = require("../utils/constants");
+const { badReq } = require("../utils/constants");
 
 module.exports.getItems = (req, res) => {
   item
     .find({})
     .then((items) => res.send({ data: items }))
-    .catch((err) => {
-      if (err.name) {
-        return errorHandler(err, res);
-      }
-      return console.error(err);
-    });
+    .catch((err) => errorHandler(err, res));
 };
 
 module.exports.createItem = async (req, res) => {
@@ -19,7 +14,7 @@ module.exports.createItem = async (req, res) => {
     const { name, weather, imageUrl } = req.body;
     if (!name || !weather || !imageUrl) {
       return res
-        .status(errors.badReq)
+        .status(badReq)
         .send({ error: "name, weather, and imageUrl are required." });
     }
     const newItem = await item.create({
@@ -52,10 +47,5 @@ module.exports.deleteItem = (req, res) => {
         data: deletedItem,
       })
     )
-    .catch((err) => {
-      if (err.name) {
-        return errorHandler(err, res);
-      }
-      return console.error(err);
-    });
+    .catch((err) => errorHandler(err, res));
 };
