@@ -15,7 +15,7 @@ module.exports.createItem = async (req, res) => {
     if (!name || !weather || !imageUrl) {
       return res
         .status(badReq)
-        .send({ error: "name, weather, and imageUrl are required." });
+        .send({ message: "name, weather, and imageUrl are required." });
     }
     const newItem = await item.create({
       name,
@@ -25,10 +25,7 @@ module.exports.createItem = async (req, res) => {
     });
     return res.status(201).send({ data: newItem });
   } catch (err) {
-    if (err.name) {
-      return errorHandler(err, res);
-    }
-    return console.error(err);
+    return errorHandler(err, res);
   }
 };
 

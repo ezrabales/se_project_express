@@ -20,7 +20,7 @@ module.exports.getUser = (req, res) => {
     })
     .then((userData) => res.send({ data: userData }))
     .catch((err) => {
-      errorHandler(err, "NotFound", res);
+      errorHandler(err, res);
     });
 };
 
@@ -30,7 +30,7 @@ module.exports.createUser = async (req, res) => {
     if (!name || !avatar) {
       return res
         .status(badReq)
-        .send({ error: "Name and avatar are required." });
+        .send({ message: "Name and avatar are required." });
     }
     const newUser = await user.create({ name, avatar });
     return res.status(201).send({ data: newUser });
