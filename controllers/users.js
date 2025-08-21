@@ -1,6 +1,6 @@
 const user = require("../models/user");
 const errorHandler = require("../utils/errors");
-const { badReq, notFound } = require("../utils/constants");
+const { castError, notFound } = require("../utils/constants");
 
 module.exports.getUsers = (req, res) => {
   user
@@ -29,7 +29,7 @@ module.exports.createUser = async (req, res) => {
     const { name, avatar } = req.body;
     if (!name || !avatar) {
       return res
-        .status(badReq)
+        .status(castError)
         .send({ message: "Name and avatar are required." });
     }
     const newUser = await user.create({ name, avatar });
