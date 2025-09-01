@@ -1,18 +1,19 @@
 const express = require("express");
 const mongoose = require("mongoose");
-const { notFound } = require("./utils/errors");
+const { notFound } = require("./utils/constants");
+const { logIn, createUser } = require("./controllers/users");
+const cors = require("cors");
 
 const app = express();
+app.use(cors());
 const { PORT = 3001 } = process.env;
 
 mongoose.connect("mongodb://127.0.0.1:27017/wtwr_db");
 
-app.use((req, res, next) => {
-  req.user = { _id: "68a0169278f04c2b144dc661" };
-  next();
-});
-
 app.use(express.json());
+
+app.post("/signin", logIn);
+app.post("/signup", createUser);
 
 app.use("/users", require("./routes/users"));
 app.use("/items", require("./routes/items"));

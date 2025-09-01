@@ -1,6 +1,6 @@
 const item = require("../models/clothingItem");
 const errorHandler = require("../utils/errors");
-const { badReq } = require("../utils/constants");
+const { castError } = require("../utils/constants");
 
 module.exports.getItems = (req, res) => {
   item
@@ -14,7 +14,7 @@ module.exports.createItem = async (req, res) => {
     const { name, weather, imageUrl } = req.body;
     if (!name || !weather || !imageUrl) {
       return res
-        .status(badReq)
+        .status(castError)
         .send({ message: "name, weather, and imageUrl are required." });
     }
     const newItem = await item.create({
