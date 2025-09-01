@@ -1,10 +1,10 @@
-const item = require("../models/clothingItem");
+const Item = require("../models/clothingItem");
 const errorHandler = require("../utils/errors");
 const { castError } = require("../utils/constants");
+const { notAuthorized } = require("../utils/constants");
 
 module.exports.getItems = (req, res) => {
-  item
-    .find({})
+  Item.find({})
     .then((items) => res.send({ data: items }))
     .catch((err) => errorHandler(err, res));
 };
@@ -31,8 +31,10 @@ module.exports.createItem = async (req, res) => {
 
 module.exports.deleteItem = (req, res) => {
   const { itemId } = req.params;
-  return item
-    .findByIdAndDelete(itemId)
+  if (req.user._id !== Item.findById(itemId).owner) {
+    res.status(notAuthorized).send({ message: "not authorized" });
+  }
+  return Item.findByIdAndDelete(itemId)
     .orFail(() => {
       const err = new Error("Item not found");
       err.name = "NotFound";

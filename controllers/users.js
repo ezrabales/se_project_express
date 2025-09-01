@@ -1,4 +1,4 @@
-const user = require("../models/user");
+const User = require("../models/user");
 const errorHandler = require("../utils/errors");
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
@@ -13,20 +13,22 @@ const {
 
 module.exports.logIn = (req, res) => {
   const { email, password } = req.body;
-  return user
-    .findOne({ email })
+  if (!email || !password) {
+    res.status(notAuthorized).send({ message: "invalid email or password" });
+  }
+  return User.findOne({ email })
     .select("+password")
     .then((user) => {
       if (!user) {
         return res
-          .status(notFound)
+          .status(notAuthorized)
           .send({ message: "incorrect email or password" });
       }
 
       return bcrypt.compare(password, user.password).then((matched) => {
         if (!matched) {
           return res
-            .status(notFound)
+            .status(notAuthorized)
             .send({ message: "incorrect email or password" });
         }
         const token = jwt.sign({ _id: user._id }, JWT_SECRET, {
@@ -42,27 +44,20 @@ module.exports.logIn = (req, res) => {
 };
 
 module.exports.getUsers = (req, res) => {
-  user
-    .find({})
+  User.find({})
     .then((users) => res.send({ data: users }))
     .catch((err) => errorHandler(err, res));
 };
 
 module.exports.getCurrentUser = (req, res) => {
-  user
-    .findById(req.user._id)
+  User.findById(req.user._id)
     .orFail(() => {
       const err = new Error("User not found");
       err.status = notFound;
       err.name = "NotFound";
       throw err;
     })
-    .then((userData) =>
-      res.send({
-        _id: userData._id,
-        email: userData.email,
-      })
-    )
+    .then((userData) => res.send(userData))
     .catch((err) => {
       errorHandler(err, res);
     });
@@ -85,7 +80,10 @@ module.exports.createUser = async (req, res) => {
     const token = jwt.sign({ _id: newUser._id }, JWT_SECRET, {
       expiresIn: "7d",
     });
-    return res.status(201).send({ data: newUser, token: token });
+    const userObject = user.toJSON();
+    delete userObject.password;
+
+    res.status(201).send(userObject);
   } catch (err) {
     if (err.code === 11000) {
       return res.status(conflict).send({
@@ -99,12 +97,11 @@ module.exports.createUser = async (req, res) => {
 module.exports.updateCurrentUser = (req, res) => {
   const userId = req.user._id;
   const { name, avatar } = req.body;
-  user
-    .findByIdAndUpdate(
-      userId,
-      { name, avatar },
-      { new: true, runValidators: true }
-    )
+  User.findByIdAndUpdate(
+    userId,
+    { name, avatar },
+    { new: true, runValidators: true }
+  )
     .then((user) => {
       if (!user) {
         return res.status(notFound).send({ message: "User not found" });
