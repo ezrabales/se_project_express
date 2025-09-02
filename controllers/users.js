@@ -1,7 +1,7 @@
-const User = require("../models/user");
-const errorHandler = require("../utils/errors");
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
+const User = require("../models/user");
+const errorHandler = require("../utils/errors");
 const { JWT_SECRET } = require("../utils/config");
 
 const {
@@ -14,7 +14,7 @@ const {
 module.exports.logIn = (req, res) => {
   const { email, password } = req.body;
   if (!email || !password) {
-    res.status(notAuthorized).send({ message: "invalid email or password" });
+    res.status(castError).send({ message: "invalid email or password" });
   }
   return User.findOne({ email })
     .select("+password")
@@ -34,18 +34,12 @@ module.exports.logIn = (req, res) => {
         const token = jwt.sign({ _id: user._id }, JWT_SECRET, {
           expiresIn: "7d",
         });
-        res.status(200).json({
+        return res.status(200).json({
           message: "Login successful",
-          token: token,
+          token,
         });
       });
     })
-    .catch((err) => errorHandler(err, res));
-};
-
-module.exports.getUsers = (req, res) => {
-  User.find({})
-    .then((users) => res.send({ data: users }))
     .catch((err) => errorHandler(err, res));
 };
 
@@ -71,19 +65,16 @@ module.exports.createUser = async (req, res) => {
         .status(castError)
         .send({ message: "Name and avatar are required." });
     }
-    const newUser = await user.create({
+    const newUser = await User.create({
       name,
       avatar,
       email,
       password: await bcrypt.hash(password, 10),
     });
-    const token = jwt.sign({ _id: newUser._id }, JWT_SECRET, {
-      expiresIn: "7d",
-    });
-    const userObject = user.toJSON();
+    const userObject = newUser.toJSON();
     delete userObject.password;
 
-    res.status(201).send(userObject);
+    return res.status(201).send(userObject);
   } catch (err) {
     if (err.code === 11000) {
       return res.status(conflict).send({
@@ -106,7 +97,7 @@ module.exports.updateCurrentUser = (req, res) => {
       if (!user) {
         return res.status(notFound).send({ message: "User not found" });
       }
-      res.status(200).send(user);
+      return res.status(200).send(user);
     })
     .catch((err) => errorHandler(err, res));
 };

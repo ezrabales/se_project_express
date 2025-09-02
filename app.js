@@ -1,8 +1,8 @@
 const express = require("express");
 const mongoose = require("mongoose");
+const cors = require("cors");
 const { notFound } = require("./utils/constants");
 const { logIn, createUser } = require("./controllers/users");
-const cors = require("cors");
 
 const app = express();
 app.use(cors());

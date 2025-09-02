@@ -1,7 +1,6 @@
 const Item = require("../models/clothingItem");
 const errorHandler = require("../utils/errors");
-const { castError } = require("../utils/constants");
-const { notAuthorized } = require("../utils/constants");
+const { castError, notFound, notAuthorized } = require("../utils/constants");
 
 module.exports.getItems = (req, res) => {
   Item.find({})
@@ -17,7 +16,7 @@ module.exports.createItem = async (req, res) => {
         .status(castError)
         .send({ message: "name, weather, and imageUrl are required." });
     }
-    const newItem = await item.create({
+    const newItem = await Item.create({
       name,
       weather,
       imageUrl,
@@ -31,20 +30,18 @@ module.exports.createItem = async (req, res) => {
 
 module.exports.deleteItem = (req, res) => {
   const { itemId } = req.params;
-  if (req.user._id !== Item.findById(itemId).owner) {
-    res.status(notAuthorized).send({ message: "not authorized" });
-  }
-  return Item.findByIdAndDelete(itemId)
-    .orFail(() => {
-      const err = new Error("Item not found");
-      err.name = "NotFound";
-      throw err;
+  Item.findById(itemId)
+    .then((item) => {
+      if (!item) {
+        return res.status(notFound).send({ message: "item not found" });
+      }
+      if (req.user._id !== item.owner.toString()) {
+        return res.status(notAuthorized).send({ message: "Not authorized" });
+      }
+      return Item.findByIdAndDelete(itemId);
     })
-    .then((deletedItem) =>
-      res.send({
-        message: "Item successfully deleted",
-        data: deletedItem,
-      })
-    )
+    .then(() => {
+      res.status(200).send({ message: "Item deleted successfully" });
+    })
     .catch((err) => errorHandler(err, res));
 };
