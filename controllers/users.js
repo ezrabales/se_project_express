@@ -14,7 +14,7 @@ const {
 module.exports.logIn = (req, res) => {
   const { email, password } = req.body;
   if (!email || !password) {
-    res.status(castError).send({ message: "invalid email or password" });
+    return res.status(castError).send({ message: "invalid email or password" });
   }
   return User.findOne({ email })
     .select("+password")

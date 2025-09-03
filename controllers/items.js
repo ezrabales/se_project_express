@@ -1,6 +1,6 @@
 const Item = require("../models/clothingItem");
 const errorHandler = require("../utils/errors");
-const { castError, notFound, notAuthorized } = require("../utils/constants");
+const { castError, notFound, forbidden } = require("../utils/constants");
 
 module.exports.getItems = (req, res) => {
   Item.find({})
@@ -36,7 +36,7 @@ module.exports.deleteItem = (req, res) => {
         return res.status(notFound).send({ message: "item not found" });
       }
       if (req.user._id !== item.owner.toString()) {
-        return res.status(notAuthorized).send({ message: "Not authorized" });
+        return res.status(forbidden).send({ message: "Not authorized" });
       }
       return Item.findByIdAndDelete(itemId);
     })
