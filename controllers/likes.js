@@ -1,7 +1,7 @@
 const Item = require("../models/clothingItem");
 const errorHandler = require("../utils/errors");
 
-module.exports.likeItem = (req, res) => {
+module.exports.likeItem = async (req, res) => {
   const { itemId } = req.params;
   const userId = req.user._id;
   Item.findByIdAndUpdate(

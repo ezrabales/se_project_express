@@ -6,7 +6,7 @@ const { logIn, createUser } = require("./controllers/users");
 
 const app = express();
 app.use(cors());
-const { PORT = 3001 } = process.env;
+const { PORT = 3002 } = process.env;
 
 mongoose.connect("mongodb://127.0.0.1:27017/wtwr_db");
 
@@ -17,6 +17,7 @@ app.post("/signup", createUser);
 
 app.use("/users", require("./routes/users"));
 app.use("/items", require("./routes/items"));
+app.use("/likes", require("./routes/likes"));
 
 app.use((req, res) =>
   res.status(notFound).send({ message: "Requested resource not found" })
