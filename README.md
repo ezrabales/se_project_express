@@ -28,3 +28,5 @@ This project is the backend for the **WTWR (What to Wear)** application, designe
 - CRUD operations for clothing items
 - Centralized error handling and status code management
 - Modular controller and route structure
+
+### [link to backend](https://github.com/ezrabales/se_project_express)
