@@ -2,10 +2,10 @@ const Item = require("../models/clothingItem");
 const errorHandler = require("../utils/errors");
 const { castError, notFound, forbidden } = require("../utils/constants");
 
-module.exports.getItems = (req, res) => {
+module.exports.getItems = (req, res, next) => {
   Item.find({})
     .then((items) => res.send({ data: items }))
-    .catch((err) => errorHandler(err, res));
+    .catch(next);
 };
 
 module.exports.createItem = async (req, res) => {
@@ -24,11 +24,11 @@ module.exports.createItem = async (req, res) => {
     });
     return res.status(201).send({ data: newItem });
   } catch (err) {
-    return errorHandler(err, res);
+    return next(err);
   }
 };
 
-module.exports.deleteItem = (req, res) => {
+module.exports.deleteItem = (req, res, next) => {
   const { itemId } = req.params;
   Item.findById(itemId)
     .then((item) => {
@@ -43,5 +43,5 @@ module.exports.deleteItem = (req, res) => {
     .then(() => {
       res.status(200).send({ message: "Item deleted successfully" });
     })
-    .catch((err) => errorHandler(err, res));
+    .catch(next);
 };

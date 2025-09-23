@@ -3,6 +3,7 @@ const jwt = require("jsonwebtoken");
 const User = require("../models/user");
 const errorHandler = require("../utils/errors");
 const { JWT_SECRET } = require("../utils/config");
+const BadRequestError = require("../errors/BadRequestError");
 
 const {
   castError,
@@ -11,7 +12,7 @@ const {
   notAuthorized,
 } = require("../utils/constants");
 
-module.exports.logIn = (req, res) => {
+module.exports.logIn = (req, res, next) => {
   const { email, password } = req.body;
   if (!email || !password) {
     return res.status(castError).send({ message: "invalid email or password" });
@@ -20,16 +21,12 @@ module.exports.logIn = (req, res) => {
     .select("+password")
     .then((user) => {
       if (!user) {
-        return res
-          .status(notAuthorized)
-          .send({ message: "incorrect email or password" });
+        next(new BadRequestError("Incorrect Email or Password"));
       }
 
       return bcrypt.compare(password, user.password).then((matched) => {
         if (!matched) {
-          return res
-            .status(notAuthorized)
-            .send({ message: "incorrect email or password" });
+          next(new BadRequestError("Incorrect Email or Password"));
         }
         const token = jwt.sign({ _id: user._id }, JWT_SECRET, {
           expiresIn: "7d",
@@ -40,30 +37,23 @@ module.exports.logIn = (req, res) => {
         });
       });
     })
-    .catch((err) => errorHandler(err, res));
+    .catch(next);
 };
 
-module.exports.getCurrentUser = (req, res) => {
+module.exports.getCurrentUser = (req, res, next) => {
   User.findById(req.user._id)
     .orFail(() => {
-      const err = new Error("User not found");
-      err.status = notFound;
-      err.name = "NotFound";
-      throw err;
+      next(new BadRequestError("User not found"));
     })
     .then((userData) => res.send(userData))
-    .catch((err) => {
-      errorHandler(err, res);
-    });
+    .catch(next);
 };
 
 module.exports.createUser = async (req, res) => {
   try {
     const { name, avatar, email, password } = req.body;
     if (!name || !avatar || !email || !password) {
-      return res
-        .status(castError)
-        .send({ message: "Name and avatar are required." });
+      next(new BadRequestError("Name and Avatar are required"));
     }
     const newUser = await User.create({
       name,
@@ -77,15 +67,13 @@ module.exports.createUser = async (req, res) => {
     return res.status(201).send(userObject);
   } catch (err) {
     if (err.code === 11000) {
-      return res.status(conflict).send({
-        message: "A user with this email already exists",
-      });
+      next(new BadRequestError("A user with this Email already exists"));
     }
-    return errorHandler(err, res);
+    return next;
   }
 };
 
-module.exports.updateCurrentUser = (req, res) => {
+module.exports.updateCurrentUser = (req, res, next) => {
   const userId = req.user._id;
   const { name, avatar } = req.body;
   User.findByIdAndUpdate(
@@ -95,9 +83,9 @@ module.exports.updateCurrentUser = (req, res) => {
   )
     .then((user) => {
       if (!user) {
-        return res.status(notFound).send({ message: "User not found" });
+        next(new BadRequestError("User not found"));
       }
       return res.status(200).send(user);
     })
-    .catch((err) => errorHandler(err, res));
+    .catch(next);
 };
