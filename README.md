@@ -29,4 +29,10 @@ This project is the backend for the **WTWR (What to Wear)** application, designe
 - Centralized error handling and status code management
 - Modular controller and route structure
 
-### [link to backend](https://github.com/ezrabales/se_project_express)
+#### Deployed Project Domain Name:
+
+[wtwrezra.crabdance.com]()
+
+#### Front-end Github Link:
+
+[FrontEnd](https://github.com/ezrabales/se_project_react)

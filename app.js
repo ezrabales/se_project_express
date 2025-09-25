@@ -17,6 +17,14 @@ mongoose.connect("mongodb://127.0.0.1:27017/wtwr_db");
 app.use(requestLogger);
 app.use(express.json());
 
+// remove this after review passes
+app.get("/crash-test", () => {
+  setTimeout(() => {
+    throw new Error("Server will crash now");
+  }, 0);
+});
+// remove this after review passes
+
 app.post("/signin", logIn);
 app.post("/signup", createUser);
 
