@@ -49,7 +49,7 @@ module.exports.getCurrentUser = (req, res, next) => {
     .catch(next);
 };
 
-module.exports.createUser = async (req, res) => {
+module.exports.createUser = async (req, res, next) => {
   try {
     const { name, avatar, email, password } = req.body;
     if (!name || !avatar || !email || !password) {

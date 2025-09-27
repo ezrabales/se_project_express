@@ -8,7 +8,7 @@ module.exports.getItems = (req, res, next) => {
     .catch(next);
 };
 
-module.exports.createItem = async (req, res) => {
+module.exports.createItem = async (req, res, next) => {
   try {
     const { name, weather, imageUrl } = req.body;
     if (!name || !weather || !imageUrl) {
