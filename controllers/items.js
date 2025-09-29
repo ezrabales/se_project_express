@@ -1,6 +1,7 @@
 const Item = require("../models/clothingItem");
 const errorHandler = require("../utils/errors");
 const { castError, notFound, forbidden } = require("../utils/constants");
+const BadRequestError = require("../errors/BadRequestError");
 
 module.exports.getItems = (req, res, next) => {
   Item.find({})
@@ -44,4 +45,28 @@ module.exports.deleteItem = (req, res, next) => {
       res.status(200).send({ message: "Item deleted successfully" });
     })
     .catch(next);
+};
+
+module.exports.toggleLike = async (req, res, next) => {
+  const { itemId } = req.params;
+  const userId = req.user._id;
+
+  try {
+    const item = await Item.findById(itemId).orFail(() => {
+      throw new BadRequestError("Item not found");
+    });
+
+    const isLiked = item.likes.includes(userId);
+    const updateOperation = isLiked
+      ? { $pull: { likes: userId } }
+      : { $addToSet: { likes: userId } };
+
+    const updatedItem = await Item.findByIdAndUpdate(itemId, updateOperation, {
+      new: true,
+    });
+
+    res.status(200).send({ data: updatedItem });
+  } catch (error) {
+    next(error);
+  }
 };

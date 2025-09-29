@@ -3,7 +3,6 @@ const express = require("express");
 const mongoose = require("mongoose");
 const cors = require("cors");
 const { notFound } = require("./utils/constants");
-const { logIn, createUser } = require("./controllers/users");
 const { errorHandler } = require("./middlewares/errorHandler");
 const { errors } = require("celebrate");
 const { requestLogger, errorLogger } = require("./middlewares/logger");
@@ -25,12 +24,7 @@ app.get("/crash-test", () => {
 });
 // remove this after review passes
 
-app.post("/signin", logIn);
-app.post("/signup", createUser);
-
-app.use("/users", require("./routes/users"));
-app.use("/items", require("./routes/items"));
-app.use("/likes", require("./routes/likes"));
+app.use("/", require("./routes"));
 
 app.use((req, res) =>
   res.status(notFound).send({ message: "Requested resource not found" })
