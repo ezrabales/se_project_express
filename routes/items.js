@@ -12,6 +12,4 @@ router.post("/", auth, createItem);
 router.delete("/:itemId", auth, deleteItem);
 router.patch("/:itemId", auth, toggleLike);
 
-router.use("/:itemId/likes", require("./likes"));
-
 module.exports = router;

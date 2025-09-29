@@ -24,7 +24,7 @@ app.get("/crash-test", () => {
 });
 // remove this after review passes
 
-app.use("/", require("./routes"));
+app.use("/", require("./routes/index"));
 
 app.use((req, res) =>
   res.status(notFound).send({ message: "Requested resource not found" })
