@@ -1,7 +1,6 @@
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 const User = require("../models/user");
-const errorHandler = require("../utils/errors");
 const { JWT_SECRET } = require("../utils/config");
 const BadRequestError = require("../errors/BadRequestError");
 
@@ -11,6 +10,9 @@ const {
   conflict,
   notAuthorized,
 } = require("../utils/constants");
+const UnauthorizedError = require("../errors/UnauthorizedError");
+const ConflictError = require("../errors/ConflictError");
+const NotFoundError = require("../errors/NotFoundError");
 
 module.exports.logIn = (req, res, next) => {
   const { email, password } = req.body;
@@ -19,15 +21,8 @@ module.exports.logIn = (req, res, next) => {
   }
   return User.findOne({ email })
     .select("+password")
-    .then((user) => {
-      if (!user) {
-        next(new BadRequestError("Incorrect Email or Password"));
-      }
-
-      return bcrypt.compare(password, user.password).then((matched) => {
-        if (!matched) {
-          next(new BadRequestError("Incorrect Email or Password"));
-        }
+    .then((user) =>
+      bcrypt.compare(password, user.password).then(() => {
         const token = jwt.sign({ _id: user._id }, JWT_SECRET, {
           expiresIn: "7d",
         });
@@ -35,9 +30,15 @@ module.exports.logIn = (req, res, next) => {
           message: "Login successful",
           token,
         });
-      });
-    })
-    .catch(next);
+      })
+    )
+    .catch((err) => {
+      if (err.code === notAuthorized) {
+        next(new UnauthorizedError("Incorrect email or password"));
+      } else {
+        next(err);
+      }
+    });
 };
 
 module.exports.getCurrentUser = (req, res, next) => {
@@ -52,9 +53,6 @@ module.exports.getCurrentUser = (req, res, next) => {
 module.exports.createUser = async (req, res, next) => {
   try {
     const { name, avatar, email, password } = req.body;
-    if (!name || !avatar || !email || !password) {
-      next(new BadRequestError("Name and Avatar are required"));
-    }
     const newUser = await User.create({
       name,
       avatar,
@@ -66,10 +64,12 @@ module.exports.createUser = async (req, res, next) => {
 
     return res.status(201).send(userObject);
   } catch (err) {
-    if (err.code === 11000) {
-      next(new BadRequestError("A user with this Email already exists"));
+    if (err.name === "ValidationError") {
+      return next(new BadRequestError("invalid data"));
+    } else if (err.name === conflict) {
+      return next(new ConflictError("email already exists"));
     }
-    return next;
+    return next(err);
   }
 };
 
@@ -81,11 +81,14 @@ module.exports.updateCurrentUser = (req, res, next) => {
     { name, avatar },
     { new: true, runValidators: true }
   )
-    .then((user) => {
-      if (!user) {
-        next(new BadRequestError("User not found"));
+    .then((user) => res.status(200).send(user))
+    .catch((err) => {
+      if (err.name === "ValidationError") {
+        next(new BadRequestError("invalid data"));
+      } else if (err.code === notFound) {
+        next(new NotFoundError("user not found"));
+      } else {
+        next(err);
       }
-      return res.status(200).send(user);
-    })
-    .catch(next);
+    });
 };

@@ -2,10 +2,10 @@ require("dotenv").config();
 const express = require("express");
 const mongoose = require("mongoose");
 const cors = require("cors");
-const { notFound } = require("./utils/constants");
-const { errorHandler } = require("./middlewares/errorHandler");
 const { errors } = require("celebrate");
+const { errorHandler } = require("./middlewares/errorHandler");
 const { requestLogger, errorLogger } = require("./middlewares/logger");
+const NotFoundError = require("./errors/NotFoundError");
 
 const app = express();
 app.use(cors());
@@ -26,10 +26,9 @@ app.get("/crash-test", () => {
 
 app.use("/", require("./routes/index"));
 
-app.use((req, res) =>
-  res.status(notFound).send({ message: "Requested resource not found" })
-);
-
+app.use(() => {
+  throw new NotFoundError("Requested resource not found");
+});
 app.use(errorLogger);
 app.use(errors());
 app.use(errorHandler);

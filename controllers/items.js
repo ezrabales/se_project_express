@@ -1,7 +1,10 @@
+const bcrypt = require("bcrypt");
 const Item = require("../models/clothingItem");
-const errorHandler = require("../utils/errors");
-const { castError, notFound, forbidden } = require("../utils/constants");
+const { notFound, forbidden } = require("../utils/constants");
 const BadRequestError = require("../errors/BadRequestError");
+const ConflictError = require("../errors/ConflictError");
+const NotFoundError = require("../errors/NotFoundError");
+const UnauthorizedError = require("../errors/UnauthorizedError");
 
 module.exports.getItems = (req, res, next) => {
   Item.find({})
@@ -10,50 +13,45 @@ module.exports.getItems = (req, res, next) => {
 };
 
 module.exports.createItem = async (req, res, next) => {
-  try {
-    const { name, weather, imageUrl } = req.body;
-    if (!name || !weather || !imageUrl) {
-      return res
-        .status(castError)
-        .send({ message: "name, weather, and imageUrl are required." });
-    }
-    const newItem = await Item.create({
-      name,
-      weather,
-      imageUrl,
-      owner: req.user._id,
+  const { name, avatar, password, email } = req.body;
+  return bcrypt
+    .hash(password, 10)
+    .then((hash) => Item.create({ name, avatar, email, password: hash }))
+    .then((data) => res.status(201).send({ data }))
+    .catch((err) => {
+      if (err.name === "ValidationError") {
+        next(new BadRequestError("Invalid data"));
+      } else if (err.code === 1100) {
+        next(new ConflictError("Duplicate email error"));
+      } else {
+        next(err);
+      }
     });
-    return res.status(201).send({ data: newItem });
-  } catch (err) {
-    return next(err);
-  }
 };
 
 module.exports.deleteItem = (req, res, next) => {
   const { itemId } = req.params;
   Item.findById(itemId)
-    .then((item) => {
-      if (!item) {
-        return res.status(notFound).send({ message: "item not found" });
-      }
-      if (req.user._id !== item.owner.toString()) {
-        return res.status(forbidden).send({ message: "Not authorized" });
-      }
-      return Item.findByIdAndDelete(itemId);
-    })
     .then(() => {
       res.status(200).send({ message: "Item deleted successfully" });
     })
-    .catch(next);
+    .catch((err) => {
+      if (err.code === notFound) {
+        next(new NotFoundError("item not found"));
+      } else if (err.code === forbidden) {
+        next(new UnauthorizedError("Not Authorized"));
+      } else {
+        next(err);
+      }
+    });
 };
 
 module.exports.toggleLike = async (req, res, next) => {
   const { itemId } = req.params;
   const userId = req.user._id;
-
   try {
     const item = await Item.findById(itemId).orFail(() => {
-      throw new BadRequestError("Item not found");
+      throw new NotFoundError("Item not found");
     });
 
     const isLiked = item.likes.includes(userId);
