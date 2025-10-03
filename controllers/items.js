@@ -21,8 +21,6 @@ module.exports.createItem = async (req, res, next) => {
     .catch((err) => {
       if (err.name === "ValidationError") {
         next(new BadRequestError("Invalid data"));
-      } else if (err.code === 1100) {
-        next(new ConflictError("Duplicate email error"));
       } else {
         next(err);
       }
@@ -32,17 +30,19 @@ module.exports.createItem = async (req, res, next) => {
 module.exports.deleteItem = (req, res, next) => {
   const { itemId } = req.params;
   Item.findById(itemId)
+    .orFail(() => {
+      next(new NotFoundError("User not found"));
+    })
     .then(() => {
-      res.status(200).send({ message: "Item deleted successfully" });
+      if (req.user._id !== item.owner.toString()) {
+        return next(new ForbiddenError("Not authorized"));
+      }
+      return Item.findByIdAndDelete(itemId).then(() =>
+        res.status(200).send({ message: "Item deleted successfully" })
+      );
     })
     .catch((err) => {
-      if (err.code === notFound) {
-        next(new NotFoundError("item not found"));
-      } else if (err.code === forbidden) {
-        next(new UnauthorizedError("Not Authorized"));
-      } else {
-        next(err);
-      }
+      next(err);
     });
 };
 

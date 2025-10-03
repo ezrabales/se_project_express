@@ -16,35 +16,33 @@ const NotFoundError = require("../errors/NotFoundError");
 
 module.exports.logIn = (req, res, next) => {
   const { email, password } = req.body;
-  if (!email || !password) {
-    return res.status(castError).send({ message: "invalid email or password" });
-  }
+
   return User.findOne({ email })
     .select("+password")
-    .then((user) =>
-      bcrypt.compare(password, user.password).then(() => {
-        const token = jwt.sign({ _id: user._id }, JWT_SECRET, {
-          expiresIn: "7d",
-        });
-        return res.status(200).json({
-          message: "Login successful",
-          token,
-        });
-      })
-    )
-    .catch((err) => {
-      if (err.code === notAuthorized) {
-        next(new UnauthorizedError("Incorrect email or password"));
-      } else {
-        next(err);
+    .then((user) => {
+      if (!user) {
+        return next(new UnauthorizedError("Incorrect Email or Password"));
       }
+      bcrypt.compare(password, user.password);
+    })
+    .then(() => {
+      const token = jwt.sign({ _id: user._id }, JWT_SECRET, {
+        expiresIn: "7d",
+      });
+      return res.status(200).json({
+        message: "Login successful",
+        token,
+      });
+    })
+    .catch((err) => {
+      next(err);
     });
 };
 
 module.exports.getCurrentUser = (req, res, next) => {
   User.findById(req.user._id)
     .orFail(() => {
-      next(new BadRequestError("User not found"));
+      next(new NotFoundError("User not found"));
     })
     .then((userData) => res.send(userData))
     .catch(next);
@@ -66,7 +64,7 @@ module.exports.createUser = async (req, res, next) => {
   } catch (err) {
     if (err.name === "ValidationError") {
       return next(new BadRequestError("invalid data"));
-    } else if (err.name === conflict) {
+    } else if (err.code === 11000) {
       return next(new ConflictError("email already exists"));
     }
     return next(err);
@@ -81,6 +79,9 @@ module.exports.updateCurrentUser = (req, res, next) => {
     { name, avatar },
     { new: true, runValidators: true }
   )
+    .orFail(() => {
+      next(new NotFoundError("User not found"));
+    })
     .then((user) => res.status(200).send(user))
     .catch((err) => {
       if (err.name === "ValidationError") {
