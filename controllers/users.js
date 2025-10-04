@@ -18,7 +18,18 @@ module.exports.logIn = (req, res, next) => {
       if (!user) {
         return next(new UnauthorizedError("Incorrect Email or Password"));
       }
-      return bcrypt.compare(password, user.password);
+      return bcrypt.compare(password, user.password).then((matched) => {
+        if (!matched) {
+          return next(new UnauthorizedError("Incorrect Email or Password"));
+        }
+        const token = jwt.sign({ _id: user._id }, JWT_SECRET, {
+          expiresIn: "7d",
+        });
+        return res.status(200).json({
+          message: "Login successful",
+          token,
+        });
+      });
     })
     .then((user) => {
       const token = jwt.sign({ _id: user._id }, JWT_SECRET, {
