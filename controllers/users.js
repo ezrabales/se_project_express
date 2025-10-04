@@ -30,18 +30,6 @@ module.exports.logIn = (req, res, next) => {
           token,
         });
       });
-    })
-    .then((user) => {
-      const token = jwt.sign({ _id: user._id }, JWT_SECRET, {
-        expiresIn: "7d",
-      });
-      return res.status(200).json({
-        message: "Login successful",
-        token,
-      });
-    })
-    .catch((err) => {
-      next(err);
     });
 };
 
