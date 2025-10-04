@@ -4,12 +4,7 @@ const User = require("../models/user");
 const { JWT_SECRET } = require("../utils/config");
 const BadRequestError = require("../errors/BadRequestError");
 
-const {
-  castError,
-  notFound,
-  conflict,
-  notAuthorized,
-} = require("../utils/constants");
+const { notFound } = require("../utils/constants");
 const UnauthorizedError = require("../errors/UnauthorizedError");
 const ConflictError = require("../errors/ConflictError");
 const NotFoundError = require("../errors/NotFoundError");
@@ -23,9 +18,9 @@ module.exports.logIn = (req, res, next) => {
       if (!user) {
         return next(new UnauthorizedError("Incorrect Email or Password"));
       }
-      bcrypt.compare(password, user.password);
+      return bcrypt.compare(password, user.password);
     })
-    .then(() => {
+    .then((user) => {
       const token = jwt.sign({ _id: user._id }, JWT_SECRET, {
         expiresIn: "7d",
       });
@@ -64,7 +59,8 @@ module.exports.createUser = async (req, res, next) => {
   } catch (err) {
     if (err.name === "ValidationError") {
       return next(new BadRequestError("invalid data"));
-    } else if (err.code === 11000) {
+    }
+    if (err.code === 11000) {
       return next(new ConflictError("email already exists"));
     }
     return next(err);

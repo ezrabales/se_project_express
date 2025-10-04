@@ -12,6 +12,5 @@ router.post("/signup", validatorCreateUser, createUser);
 
 router.use("/users", require("./users"));
 router.use("/items", require("./items"));
-router.use("/likes", require("./items"));
 
 module.exports = router;

@@ -1,10 +1,7 @@
-const bcrypt = require("bcrypt");
 const Item = require("../models/clothingItem");
-const { notFound, forbidden } = require("../utils/constants");
 const BadRequestError = require("../errors/BadRequestError");
-const ConflictError = require("../errors/ConflictError");
 const NotFoundError = require("../errors/NotFoundError");
-const UnauthorizedError = require("../errors/UnauthorizedError");
+const ForbiddenError = require("../errors/ForbiddenError");
 
 module.exports.getItems = (req, res, next) => {
   Item.find({})
@@ -13,10 +10,9 @@ module.exports.getItems = (req, res, next) => {
 };
 
 module.exports.createItem = async (req, res, next) => {
-  const { name, avatar, password, email } = req.body;
-  return bcrypt
-    .hash(password, 10)
-    .then((hash) => Item.create({ name, avatar, email, password: hash }))
+  const { name, imageUrl, weather } = req.body;
+  const owner = req.user._id;
+  return Item.create({ name, imageUrl, weather, owner })
     .then((data) => res.status(201).send({ data }))
     .catch((err) => {
       if (err.name === "ValidationError") {
@@ -33,7 +29,7 @@ module.exports.deleteItem = (req, res, next) => {
     .orFail(() => {
       next(new NotFoundError("User not found"));
     })
-    .then(() => {
+    .then((item) => {
       if (req.user._id !== item.owner.toString()) {
         return next(new ForbiddenError("Not authorized"));
       }

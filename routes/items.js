@@ -12,8 +12,9 @@ const {
 } = require("../middlewares/validation");
 
 router.get("/", getItems);
-router.post("/", validatorCreateItem, auth, createItem);
-router.delete("/:itemId", validatorGetById, auth, deleteItem);
-router.patch("/:itemId", validatorGetById, auth, toggleLike);
+router.post("/", auth, validatorCreateItem, createItem);
+router.delete("/:itemId", auth, validatorGetById, deleteItem);
+router.put("/:itemId/likes", auth, validatorGetById, toggleLike);
+router.delete("/:itemId/likes", auth, validatorGetById, toggleLike);
 
 module.exports = router;
